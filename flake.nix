@@ -9,7 +9,8 @@
 
   outputs = { nixpkgs, treefmt-nix, ... }:
     let
-      allSystems = [ "x86_64-darwin" "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
+      allSystems =
+        [ "x86_64-darwin" "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs allSystems;
       forDarwin = nixpkgs.lib.genAttrs [ "x86_64-darwin" "aarch64-darwin" ];
 
@@ -32,12 +33,12 @@
         python3Packages = final.python3.pkgs;
       };
 
-      pkgsFor = system: import nixpkgs {
-        inherit system;
-        overlays = [ overlay ];
-      };
-    in
-    {
+      pkgsFor = system:
+        import nixpkgs {
+          inherit system;
+          overlays = [ overlay ];
+        };
+    in {
       # Main package set
       packages = forDarwin (system:
         let pkgs = pkgsFor system;
@@ -49,18 +50,22 @@
               direnv
               tk
               tcl
-              (python3.withPackages (ps: [
-                ps.tkinter
-                ps.weallcode-robot
-              ]))
+              (python3.withPackages (ps: [ ps.tkinter ps.weallcode-robot ]))
+              # GUI apps
+              (vscode-with-extensions.override {
+                vscodeExtensions = with vscode-extensions; [
+                  ms-python.python
+                  ms-python.vscode-pylance
+                ];
+              })
+              google-chrome
+              dockutil
             ];
           };
 
           # Individual packages for flexibility
-          python = pkgs.python3.withPackages (ps: [
-            ps.tkinter
-            ps.weallcode-robot
-          ]);
+          python =
+            pkgs.python3.withPackages (ps: [ ps.tkinter ps.weallcode-robot ]);
         });
 
       # Dev shell for testing
@@ -71,10 +76,7 @@
             packages = with pkgs; [
               git
               direnv
-              (python3.withPackages (ps: [
-                ps.tkinter
-                ps.weallcode-robot
-              ]))
+              (python3.withPackages (ps: [ ps.tkinter ps.weallcode-robot ]))
             ];
           };
         });
