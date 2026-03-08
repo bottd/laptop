@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# WeAllCode Laptop Setup
+# WeAllCode Laptop Setup (Linux)
 #
 # To install:
 #   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/bottd/laptop/nix/install.sh)"
@@ -8,59 +8,29 @@
 
 set -e
 
-GITHUB_REPO="https://raw.githubusercontent.com/bottd/laptop/nix"
 ARCH=$(uname -m)
-MACOS_VERSION=$(sw_vers -productVersion | cut -d. -f1)
-
-echo "Detected: macOS $MACOS_VERSION on $ARCH"
+echo "Detected: Linux on $ARCH"
 
 #
 # 1. Install Nix
 #
 if ! command -v nix &>/dev/null; then
   echo "Installing Nix..."
-  if [ "$ARCH" = "arm64" ]; then
-    curl -L https://github.com/DeterminateSystems/nix-installer/releases/latest/download/nix-installer-aarch64-darwin -o /tmp/nix-installer
-    chmod +x /tmp/nix-installer
-    /tmp/nix-installer install
-    rm /tmp/nix-installer
-  else
-    [ "$MACOS_VERSION" -lt 13 ] && NIX_URL="https://releases.nixos.org/nix/nix-2.18.1/install" || NIX_URL="https://nixos.org/nix/install"
-    sh <(curl -L "$NIX_URL")
-  fi
-  [ -f '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ] && . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+  curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
 fi
 
 #
-# 2. Install Nix packages from flake
+# 2. Apply home-manager configuration
 #
-echo "Installing Nix packages..."
-nix --extra-experimental-features "nix-command flakes" profile remove '.*' 2>/dev/null || true
-nix --extra-experimental-features "nix-command flakes" profile install --no-write-lock-file "github:bottd/laptop?ref=nix"
+echo "Applying home-manager configuration..."
 
-#
-# 3. macOS-specific setup (can't be done in Nix without nix-darwin)
-#
+if [ "$ARCH" = "aarch64" ]; then
+  HM_CONFIG="weallcode-arm"
+else
+  HM_CONFIG="weallcode"
+fi
 
-# VS Code settings - copy from nix store
-echo "Configuring VS Code..."
-mkdir -p "$HOME/Library/Application Support/Code/User"
-SETTINGS=$(nix --extra-experimental-features "nix-command flakes" build --no-link --print-out-paths "github:bottd/laptop?ref=nix#vscode-settings" 2>/dev/null) &&
-  cp "$SETTINGS" "$HOME/Library/Application Support/Code/User/settings.json"
-
-# Wallpaper
-echo "Setting wallpaper..."
-curl -fsSL "$GITHUB_REPO/weallcode-background.png" -o "$HOME/.weallcode-background.png"
-osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$HOME/.weallcode-background.png\"" 2>/dev/null || true
-
-# Dock - apps are in nix profile
-echo "Configuring Dock..."
-NIX_APPS="$HOME/.nix-profile/Applications"
-dockutil --remove all \
-  --add "$NIX_APPS/Google Chrome.app" \
-  --add "$NIX_APPS/Visual Studio Code.app" 2>/dev/null || true
-
-# Shell
-grep -q 'direnv hook' "$HOME/.zshrc" 2>/dev/null || echo 'eval "$(direnv hook zsh)"' >>"$HOME/.zshrc"
+nix run home-manager -- switch --flake "github:bottd/laptop?ref=nix#${HM_CONFIG}"
 
 echo "Done! Restart your terminal."
