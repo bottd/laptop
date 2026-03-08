@@ -55,7 +55,7 @@ if [ "$MACOS_VERSION" -lt 13 ]; then
   OVERLAY_DIR=$(mktemp -d)
   cat > "$OVERLAY_DIR/flake.nix" << 'OVERLAYEOF'
 {
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-22.05-darwin";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-23.05-darwin";
   outputs = { nixpkgs, ... }: {
     packages.x86_64-darwin.coreutils =
       let pkgs = import nixpkgs {
