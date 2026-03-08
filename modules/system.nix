@@ -1,6 +1,23 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
+  # Patch coreutils to not use mkfifoat on macOS 12
+  nixpkgs.overlays = [
+    (final: prev: {
+      coreutils = prev.coreutils.overrideAttrs (old: {
+        # Patch to stub out mkfifoat/mknodat for macOS 12 compatibility
+        postPatch = (old.postPatch or "") + ''
+          substituteInPlace lib/mkfifoat.c --replace-fail \
+            '#if HAVE_MKFIFOAT' \
+            '#if 0 /* disabled for macOS 12 */ && HAVE_MKFIFOAT'
+          substituteInPlace lib/mknodat.c --replace-fail \
+            '#if HAVE_MKNODAT' \
+            '#if 0 /* disabled for macOS 12 */ && HAVE_MKNODAT'
+        '';
+      });
+    })
+  ];
+
   services.nix-daemon.enable = true;
 
   nix.settings = {
