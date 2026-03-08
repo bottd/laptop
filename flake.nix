@@ -11,37 +11,32 @@
 
   outputs = { nixpkgs, home-manager, treefmt-nix, ... }:
     let
-      allSystems =
-        [ "x86_64-darwin" "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
+      allSystems = [ "x86_64-darwin" "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs allSystems;
       forDarwin = nixpkgs.lib.genAttrs [ "x86_64-darwin" "aarch64-darwin" ];
 
-      mkHome = system:
-        home-manager.lib.homeManagerConfiguration {
-          pkgs = import nixpkgs { inherit system; };
-          modules = [
-            ./home.nix
-            {
-              home.username = "weallcode";
-              home.homeDirectory = "/Users/weallcode";
-            }
-          ];
-        };
-    in {
-      # Simple package env (fallback)
+      overlay = import ./modules/overlay.nix;
+
+      pkgsFor = system: import nixpkgs {
+        inherit system;
+        overlays = [ overlay ];
+      };
+
+      mkHome = system: home-manager.lib.homeManagerConfiguration {
+        pkgs = pkgsFor system;
+        modules = [
+          ./home.nix
+          {
+            home.username = "weallcode";
+            home.homeDirectory = "/Users/weallcode";
+          }
+        ];
+      };
+    in
+    {
+      # Simple package env (fallback for macOS 12)
       packages = forDarwin (system:
-        let
-          pkgs = import nixpkgs { inherit system; };
-          weallcode-robot = pkgs.python3Packages.buildPythonPackage rec {
-            pname = "weallcode_robot";
-            version = "3.1.4";
-            src = pkgs.fetchPypi {
-              inherit pname version;
-              hash = "sha256-f+CR7eRC3XmBlEh/gPPsC3bDCZZtTvkxaJ56ehhr/8k=";
-            };
-            propagatedBuildInputs = with pkgs.python3Packages; [ bleak ];
-            doCheck = false;
-          };
+        let pkgs = pkgsFor system;
         in {
           default = pkgs.buildEnv {
             name = "weallcode-env";
@@ -61,6 +56,7 @@
         "weallcode@x86_64-darwin" = mkHome "x86_64-darwin";
       };
 
+      # Formatter
       formatter = forAllSystems (system:
         (treefmt-nix.lib.evalModule nixpkgs.legacyPackages.${system} {
           projectRootFile = "flake.nix";
