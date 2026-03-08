@@ -41,15 +41,28 @@ if ! command -v nix &>/dev/null; then
   fi
 fi
 
-# Install packages from flake
-echo "Installing packages..."
-# Wipe existing profile to avoid conflicts
+# Clean up existing profiles
+echo "Cleaning up existing profiles..."
 nix --extra-experimental-features "nix-command flakes" profile wipe-history 2>/dev/null || true
-# Remove all profile entries by index
 for i in $(seq 0 20); do
   nix --extra-experimental-features "nix-command flakes" profile remove "$i" 2>/dev/null || true
 done
-nix --extra-experimental-features "nix-command flakes" profile install --no-write-lock-file "github:bottd/laptop?ref=nix"
+
+# Determine home-manager config name
+if [ "$ARCH" = "arm64" ]; then
+  HM_CONFIG="weallcode@aarch64-darwin"
+else
+  HM_CONFIG="weallcode@x86_64-darwin"
+fi
+
+# Try home-manager first, fall back to simple profile
+echo "Applying home-manager configuration..."
+if nix --extra-experimental-features "nix-command flakes" run home-manager -- switch --no-write-lock-file --flake "github:bottd/laptop?ref=nix#${HM_CONFIG}" 2>/dev/null; then
+  echo "Home-manager configuration applied successfully!"
+else
+  echo "Home-manager failed, falling back to simple profile..."
+  nix --extra-experimental-features "nix-command flakes" profile install --no-write-lock-file "github:bottd/laptop?ref=nix"
+fi
 
 # Install VS Code and Chrome via Homebrew casks (Nix casks are problematic on macOS)
 if ! command -v brew &>/dev/null; then
