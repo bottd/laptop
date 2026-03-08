@@ -30,7 +30,18 @@
     in {
       # Simple package env (fallback)
       packages = forDarwin (system:
-        let pkgs = import nixpkgs { inherit system; };
+        let
+          pkgs = import nixpkgs { inherit system; };
+          weallcode-robot = pkgs.python3Packages.buildPythonPackage rec {
+            pname = "weallcode_robot";
+            version = "3.1.4";
+            src = pkgs.fetchPypi {
+              inherit pname version;
+              hash = "sha256-f+CR7eRC3XmBlEh/gPPsC3bDCZZtTvkxaJ56ehhr/8k=";
+            };
+            propagatedBuildInputs = with pkgs.python3Packages; [ bleak ];
+            doCheck = false;
+          };
         in {
           default = pkgs.buildEnv {
             name = "weallcode-env";
@@ -39,7 +50,7 @@
               direnv
               tk
               tcl
-              (python3.withPackages (ps: [ ps.tkinter ]))
+              (python3.withPackages (ps: [ ps.tkinter weallcode-robot ]))
             ];
           };
         });
