@@ -1,15 +1,10 @@
 { pkgs, lib, ... }:
 
 {
-  # Force rebuild coreutils for macOS 12.x compatibility
+  # Use uutils-coreutils (Rust) instead of GNU coreutils for macOS 12.x compatibility
   nixpkgs.overlays = [
     (final: prev: {
-      coreutils = prev.coreutils.overrideAttrs (old: {
-        # Disable features requiring newer macOS
-        configureFlags = (old.configureFlags or [ ]) ++ [
-          "--disable-year2038"
-        ];
-      });
+      coreutils = prev.uutils-coreutils;
     })
   ];
   services.nix-daemon.enable = true;
