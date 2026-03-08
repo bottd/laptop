@@ -3,15 +3,16 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-22.11-darwin";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     treefmt-nix.url = "github:numtide/treefmt-nix";
-    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
     {
       nixpkgs,
+      nixpkgs-unstable,
       nix-darwin,
       treefmt-nix,
       ...
@@ -27,6 +28,7 @@
       mkDarwin =
         platform:
         nix-darwin.lib.darwinSystem {
+          specialArgs = { inherit nixpkgs-unstable; };
           modules = [
             ./modules/system.nix
             {
@@ -45,7 +47,7 @@
 
       formatter = forAllSystems (
         system:
-        (treefmt-nix.lib.evalModule nixpkgs.legacyPackages.${system} {
+        (treefmt-nix.lib.evalModule nixpkgs-unstable.legacyPackages.${system} {
           projectRootFile = "flake.nix";
           programs.nixfmt.enable = true;
           programs.shfmt.enable = true;

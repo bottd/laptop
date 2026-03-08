@@ -1,10 +1,18 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  nixpkgs-unstable,
+  ...
+}:
 
+let
+  unstablePkgs = import nixpkgs-unstable { system = pkgs.system; };
+in
 {
   # Use uutils-coreutils (Rust) instead of GNU coreutils for macOS 12.x compatibility
   nixpkgs.overlays = [
     (final: prev: {
-      coreutils = prev.uutils-coreutils;
+      coreutils = unstablePkgs.uutils-coreutils;
     })
   ];
   services.nix-daemon.enable = true;
