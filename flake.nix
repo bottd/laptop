@@ -21,6 +21,8 @@
               git
               vim
               direnv
+              tk
+              tcl
               (python3.withPackages (ps: [ ps.tkinter ]))
             ];
           };
