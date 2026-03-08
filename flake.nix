@@ -2,9 +2,9 @@
   description = "We All Code - macOS laptop configuration";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-23.05-darwin";
-    nix-darwin.url = "github:LnL7/nix-darwin/master";
-    nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-24.11-darwin";
+    home-manager.url = "github:nix-community/home-manager/release-24.11";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -12,35 +12,32 @@
   outputs =
     {
       nixpkgs,
-      nix-darwin,
+      home-manager,
       treefmt-nix,
       ...
     }:
     let
       forAllSystems = nixpkgs.lib.genAttrs [
-        "x86_64-linux"
-        "aarch64-linux"
         "x86_64-darwin"
         "aarch64-darwin"
       ];
 
-      mkDarwin =
-        platform:
-        nix-darwin.lib.darwinSystem {
+      mkHome = system:
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = import nixpkgs { inherit system; };
           modules = [
-            ./modules/system.nix
+            ./modules/home.nix
             {
-              nixpkgs.hostPlatform = platform;
-              networking.hostName = "weallcode-laptop";
-              system.stateVersion = 5;
+              home.username = "weallcode";
+              home.homeDirectory = "/Users/weallcode";
             }
           ];
         };
     in
     {
-      darwinConfigurations = {
-        weallcode-laptop = mkDarwin "aarch64-darwin";
-        weallcode-laptop-intel = mkDarwin "x86_64-darwin";
+      homeConfigurations = {
+        "weallcode@weallcode-laptop" = mkHome "aarch64-darwin";
+        "weallcode@weallcode-laptop-intel" = mkHome "x86_64-darwin";
       };
 
       formatter = forAllSystems (
