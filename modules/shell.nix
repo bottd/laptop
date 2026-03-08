@@ -1,9 +1,7 @@
 { pkgs, ... }:
 
 {
-  home.packages = with pkgs; [
-    direnv
-  ];
+  home.packages = with pkgs; [ direnv ];
 
   programs.zsh = {
     enable = true;
