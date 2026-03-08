@@ -19,7 +19,17 @@ fi
 # Install Nix if not present
 if ! command -v nix &>/dev/null; then
   echo "Installing Nix..."
-  curl -L https://github.com/DeterminateSystems/nix-installer/releases/latest/download/nix-installer.sh | sh -s -- install
+
+  if [ "$ARCH" = "arm64" ]; then
+    # Determinate installer for Apple Silicon
+    curl -L https://github.com/DeterminateSystems/nix-installer/releases/latest/download/nix-installer-aarch64-darwin -o /tmp/nix-installer
+    chmod +x /tmp/nix-installer
+    /tmp/nix-installer install
+    rm /tmp/nix-installer
+  else
+    # Official Nix installer for Intel Macs (Determinate dropped x86_64-darwin support)
+    sh <(curl -L https://nixos.org/nix/install)
+  fi
 
   # Source nix for current shell
   . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
