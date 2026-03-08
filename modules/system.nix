@@ -1,6 +1,17 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
+  # Force rebuild coreutils for macOS 12.x compatibility
+  nixpkgs.overlays = [
+    (final: prev: {
+      coreutils = prev.coreutils.overrideAttrs (old: {
+        # Disable features requiring newer macOS
+        configureFlags = (old.configureFlags or [ ]) ++ [
+          "--disable-year2038"
+        ];
+      });
+    })
+  ];
   services.nix-daemon.enable = true;
 
   nix.settings = {
