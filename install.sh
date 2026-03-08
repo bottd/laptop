@@ -47,11 +47,40 @@ fi
 
 # Apply nix-darwin configuration
 echo "Applying nix-darwin configuration..."
-# Force source builds on macOS 12 to use local SDK
+# For macOS 12, we need to patch coreutils first
 if [ "$MACOS_VERSION" -lt 13 ]; then
-  nix --extra-experimental-features "nix-command flakes" --option substitute false run nix-darwin -- switch --flake "github:bottd/laptop?ref=nix#${FLAKE_CONFIG}"
-else
-  nix --extra-experimental-features "nix-command flakes" run nix-darwin -- switch --flake "github:bottd/laptop?ref=nix#${FLAKE_CONFIG}"
+  echo "Patching coreutils for macOS 12 compatibility..."
+
+  # Create a temporary overlay flake
+  OVERLAY_DIR=$(mktemp -d)
+  cat > "$OVERLAY_DIR/flake.nix" << 'OVERLAYEOF'
+{
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-22.05-darwin";
+  outputs = { nixpkgs, ... }: {
+    packages.x86_64-darwin.coreutils =
+      let pkgs = import nixpkgs {
+        system = "x86_64-darwin";
+        overlays = [(final: prev: {
+          coreutils = prev.coreutils.overrideAttrs (old: {
+            configureFlags = (old.configureFlags or []) ++ [
+              "ac_cv_func_mkfifoat=no"
+              "ac_cv_func_mknodat=no"
+            ];
+          });
+        })];
+      };
+      in pkgs.coreutils;
+  };
+}
+OVERLAYEOF
+
+  # Build patched coreutils and add to profile
+  nix --extra-experimental-features "nix-command flakes" profile install "$OVERLAY_DIR#coreutils" --option substitute false
+  rm -rf "$OVERLAY_DIR"
 fi
+
+# Apply nix-darwin configuration
+echo "Applying nix-darwin configuration..."
+nix --extra-experimental-features "nix-command flakes" run nix-darwin -- switch --flake "github:bottd/laptop?ref=nix#${FLAKE_CONFIG}"
 
 echo "Setup complete! Restart your Mac for all changes to take effect."
