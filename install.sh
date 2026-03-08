@@ -38,6 +38,6 @@ fi
 
 # Apply nix-darwin configuration
 echo "Applying nix-darwin configuration..."
-nix --extra-experimental-features "nix-command flakes" run nix-darwin -- switch --flake "github:bottd/laptop?ref=nix#${FLAKE_CONFIG}"
+nix --extra-experimental-features "nix-command flakes" --option substituters "" run nix-darwin -- switch --flake "github:bottd/laptop?ref=nix#${FLAKE_CONFIG}"
 
 echo "Setup complete! Restart your Mac for all changes to take effect."
