@@ -1,42 +1,44 @@
 {
-  description = "We All Code - macOS laptop packages";
+  description = "We All Code - macOS laptop configuration";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-24.11-darwin";
-    home-manager.url = "github:nix-community/home-manager/release-24.11";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { nixpkgs, home-manager, treefmt-nix, ... }:
+  outputs = { nixpkgs, treefmt-nix, ... }:
     let
-      allSystems =
-        [ "x86_64-darwin" "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
+      allSystems = [ "x86_64-darwin" "aarch64-darwin" "x86_64-linux" "aarch64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs allSystems;
       forDarwin = nixpkgs.lib.genAttrs [ "x86_64-darwin" "aarch64-darwin" ];
 
-      overlay = import ./modules/overlay.nix;
-
-      pkgsFor = system:
-        import nixpkgs {
-          inherit system;
-          overlays = [ overlay ];
+      # Python packages overlay
+      overlay = final: prev: {
+        python3 = prev.python3.override {
+          packageOverrides = pyFinal: pyPrev: {
+            weallcode-robot = pyPrev.buildPythonPackage rec {
+              pname = "weallcode_robot";
+              version = "3.1.4";
+              src = prev.fetchPypi {
+                inherit pname version;
+                hash = "sha256-f+CR7eRC3XmBlEh/gPPsC3bDCZZtTvkxaJ56ehhr/8k=";
+              };
+              propagatedBuildInputs = with pyPrev; [ bleak ];
+              doCheck = false;
+            };
+          };
         };
+        python3Packages = final.python3.pkgs;
+      };
 
-      mkHome = system:
-        home-manager.lib.homeManagerConfiguration {
-          pkgs = pkgsFor system;
-          modules = [
-            ./home.nix
-            {
-              home.username = "weallcode";
-              home.homeDirectory = "/Users/weallcode";
-            }
-          ];
-        };
-    in {
-      # Simple package env (fallback for macOS 12)
+      pkgsFor = system: import nixpkgs {
+        inherit system;
+        overlays = [ overlay ];
+      };
+    in
+    {
+      # Main package set
       packages = forDarwin (system:
         let pkgs = pkgsFor system;
         in {
@@ -47,18 +49,36 @@
               direnv
               tk
               tcl
-              (python3.withPackages (ps: [ ps.tkinter ps.weallcode-robot ]))
+              (python3.withPackages (ps: [
+                ps.tkinter
+                ps.weallcode-robot
+              ]))
+            ];
+          };
+
+          # Individual packages for flexibility
+          python = pkgs.python3.withPackages (ps: [
+            ps.tkinter
+            ps.weallcode-robot
+          ]);
+        });
+
+      # Dev shell for testing
+      devShells = forDarwin (system:
+        let pkgs = pkgsFor system;
+        in {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              git
+              direnv
+              (python3.withPackages (ps: [
+                ps.tkinter
+                ps.weallcode-robot
+              ]))
             ];
           };
         });
 
-      # Home-manager configs
-      homeConfigurations = {
-        "weallcode@aarch64-darwin" = mkHome "aarch64-darwin";
-        "weallcode@x86_64-darwin" = mkHome "x86_64-darwin";
-      };
-
-      # Formatter
       formatter = forAllSystems (system:
         (treefmt-nix.lib.evalModule nixpkgs.legacyPackages.${system} {
           projectRootFile = "flake.nix";
