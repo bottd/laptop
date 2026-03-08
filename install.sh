@@ -19,17 +19,7 @@ fi
 # Install Nix if not present
 if ! command -v nix &>/dev/null; then
   echo "Installing Nix..."
-
-  if [ "$ARCH" = "arm64" ]; then
-    NIX_INSTALLER_URL="https://github.com/DeterminateSystems/nix-installer/releases/latest/download/nix-installer-aarch64-darwin"
-  else
-    NIX_INSTALLER_URL="https://github.com/DeterminateSystems/nix-installer/releases/latest/download/nix-installer-x86_64-darwin"
-  fi
-
-  curl -L "$NIX_INSTALLER_URL" -o /tmp/nix-installer
-  chmod +x /tmp/nix-installer
-  /tmp/nix-installer install
-  rm /tmp/nix-installer
+  curl -L https://github.com/DeterminateSystems/nix-installer/releases/latest/download/nix-installer.sh | sh -s -- install
 
   # Source nix for current shell
   . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
