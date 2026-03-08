@@ -1,20 +1,6 @@
-{
-  pkgs,
-  lib,
-  nixpkgs-unstable,
-  ...
-}:
+{ pkgs, ... }:
 
-let
-  unstablePkgs = import nixpkgs-unstable { system = pkgs.system; };
-in
 {
-  # Use uutils-coreutils (Rust) instead of GNU coreutils for macOS 12.x compatibility
-  nixpkgs.overlays = [
-    (final: prev: {
-      coreutils = unstablePkgs.uutils-coreutils;
-    })
-  ];
   services.nix-daemon.enable = true;
 
   nix.settings = {
@@ -22,9 +8,14 @@ in
       "nix-command"
       "flakes"
     ];
-    # Disable binary cache - force source builds for macOS 12.x compatibility
-    substituters = [ ];
-    trusted-public-keys = [ ];
+    substituters = [
+      "https://cache.nixos.org"
+      "https://nix-community.cachix.org"
+    ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+    ];
   };
 
   nix.gc = {
