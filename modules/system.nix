@@ -61,4 +61,9 @@
       ShowStatusBar = true;
     };
   };
+
+  system.activationScripts.postActivation.text = ''
+    # Set wallpaper for all desktops
+    osascript -e 'tell application "System Events" to tell every desktop to set picture to "${../weallcode-background.png}"'
+  '';
 }
