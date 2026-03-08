@@ -21,7 +21,6 @@
             name = "weallcode-env";
             paths = with pkgs; [
               git
-              vim
               direnv
               tk
               tcl

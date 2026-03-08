@@ -43,6 +43,8 @@ fi
 
 # Install packages from flake
 echo "Installing packages..."
+# Remove existing weallcode-env if present to avoid conflicts
+nix --extra-experimental-features "nix-command flakes" profile remove '.*weallcode-env.*' 2>/dev/null || true
 nix --extra-experimental-features "nix-command flakes" profile install --no-write-lock-file "github:bottd/laptop?ref=nix"
 
 # Install VS Code and Chrome via Homebrew casks (Nix casks are problematic on macOS)
