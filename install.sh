@@ -41,13 +41,12 @@ if ! command -v nix &>/dev/null; then
   fi
 fi
 
-# Install packages from flake
+# Install packages
 echo "Installing packages..."
 # Remove any existing nix-env packages to avoid conflicts
 nix-env -e '.*' 2>/dev/null || true
-# Remove existing profiles to avoid conflicts
-nix --extra-experimental-features "nix-command flakes" profile remove '.*' 2>/dev/null || true
-nix --extra-experimental-features "nix-command flakes" profile install --no-write-lock-file "github:bottd/laptop?ref=nix"
+# Install packages directly
+nix-env -iA nixpkgs.git nixpkgs.direnv nixpkgs.tk nixpkgs.tcl nixpkgs.python3 nixpkgs.python3Packages.tkinter
 
 # Install VS Code and Chrome via Homebrew casks (Nix casks are problematic on macOS)
 if ! command -v brew &>/dev/null; then
