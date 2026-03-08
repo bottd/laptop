@@ -28,7 +28,8 @@ if ! command -v nix &>/dev/null; then
     rm /tmp/nix-installer
   else
     # Official Nix installer for Intel Macs (Determinate dropped x86_64-darwin support)
-    sh <(curl -L https://nixos.org/nix/install)
+    # Use Nix 2.18.1 for compatibility with macOS 12.x Monterey
+    sh <(curl -L https://releases.nixos.org/nix/nix-2.18.1/install)
   fi
 
   # Source nix for current shell
