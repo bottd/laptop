@@ -43,7 +43,7 @@ fi
 
 # Install packages from flake
 echo "Installing packages..."
-nix --extra-experimental-features "nix-command flakes" profile install "github:bottd/laptop?ref=nix"
+nix --extra-experimental-features "nix-command flakes" profile install --no-write-lock-file "github:bottd/laptop?ref=nix"
 
 # Install VS Code and Chrome via Homebrew casks (Nix casks are problematic on macOS)
 if ! command -v brew &>/dev/null; then
