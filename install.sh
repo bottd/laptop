@@ -42,9 +42,11 @@ nix --extra-experimental-features "nix-command flakes" profile install --no-writ
 # 3. macOS-specific setup (can't be done in Nix without nix-darwin)
 #
 
-# VS Code settings
+# VS Code settings - copy from nix store
+echo "Configuring VS Code..."
 mkdir -p "$HOME/Library/Application Support/Code/User"
-curl -fsSL "$GITHUB_REPO/vscode-settings.json" -o "$HOME/Library/Application Support/Code/User/settings.json" 2>/dev/null || true
+SETTINGS=$(nix --extra-experimental-features "nix-command flakes" build --no-link --print-out-paths "github:bottd/laptop?ref=nix#vscode-settings" 2>/dev/null) &&
+  cp "$SETTINGS" "$HOME/Library/Application Support/Code/User/settings.json"
 
 # Wallpaper
 echo "Setting wallpaper..."
