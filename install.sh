@@ -8,17 +8,13 @@
 
 set -e
 
+GITHUB_REPO="https://raw.githubusercontent.com/bottd/laptop/nix"
+
 # Detect architecture
 ARCH=$(uname -m)
 MACOS_VERSION=$(sw_vers -productVersion | cut -d. -f1)
 
 echo "Detected: macOS $MACOS_VERSION on $ARCH"
-
-if [ "$ARCH" = "arm64" ]; then
-  HOME_CONFIG="weallcode@weallcode-laptop"
-else
-  HOME_CONFIG="weallcode@weallcode-laptop-intel"
-fi
 
 # Install Nix if not present
 if ! command -v nix &>/dev/null; then
@@ -32,7 +28,6 @@ if ! command -v nix &>/dev/null; then
     rm /tmp/nix-installer
   else
     # Official Nix installer for Intel Macs
-    # Use Nix 2.18.1 for macOS 12.x compatibility
     if [ "$MACOS_VERSION" -lt 13 ]; then
       sh <(curl -L https://releases.nixos.org/nix/nix-2.18.1/install)
     else
@@ -46,8 +41,13 @@ if ! command -v nix &>/dev/null; then
   fi
 fi
 
-# Apply home-manager configuration
-echo "Applying home-manager configuration..."
-nix --extra-experimental-features "nix-command flakes" run home-manager -- switch --flake "github:bottd/laptop?ref=nix#${HOME_CONFIG}"
+# Install packages directly
+echo "Installing packages..."
+nix-env -iA nixpkgs.git nixpkgs.vim nixpkgs.python3
+
+# Set wallpaper
+echo "Setting wallpaper..."
+curl -fsSL "$GITHUB_REPO/weallcode-background.png" -o "$HOME/.weallcode-background.png"
+osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$HOME/.weallcode-background.png\""
 
 echo "Setup complete! Restart your terminal for all changes to take effect."
