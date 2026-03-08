@@ -79,7 +79,7 @@ fi
 # Setup direnv in shell
 echo "Configuring shell..."
 if ! grep -q 'direnv hook' "$HOME/.zshrc" 2>/dev/null; then
-  echo 'eval "$(direnv hook zsh)"' >> "$HOME/.zshrc"
+  echo 'eval "$(direnv hook zsh)"' >>"$HOME/.zshrc"
 fi
 
 echo "Setup complete! Restart your terminal for all changes to take effect."
