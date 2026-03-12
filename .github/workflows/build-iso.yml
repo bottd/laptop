@@ -1,0 +1,27 @@
+name: Build ISO
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install nix
+        uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup nix environment
+        uses: nicknovitski/nix-develop@v1
+      - name: Build ISO
+        run: nix build .#weallcode
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weallcode-nixos-iso
+          path: result/iso/*.iso
+          retention-days: 30
+          compression-level: 0
