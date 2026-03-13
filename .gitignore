@@ -1,1 +1,3 @@
 weallcode-logon.app/
+.direnv
+.pre-commit-config.yaml
