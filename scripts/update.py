@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import subprocess
+import sys
 
 from rich.console import Console
 from rich.panel import Panel
@@ -29,7 +30,7 @@ def main():
 
     console.rule("Installing weallcode-robot")
     subprocess.run(
-        ["pip", "install", "--user", "--upgrade", ROBOT_PKG],
+        [sys.executable, "-m", "pip", "install", "--user", "--upgrade", ROBOT_PKG],
         check=True,
     )
 
