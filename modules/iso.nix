@@ -10,9 +10,9 @@ in
     ./python.nix
   ];
 
-  networking.hostName = "weallcode";
-
   config = {
+    networking.hostName = "weallcode";
+
     image.fileName = "${hostName}-installer.iso";
     isoImage = {
       makeEfiBootable = true;
