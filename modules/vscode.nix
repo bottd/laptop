@@ -11,7 +11,7 @@
       ];
       userSettings = {
         "editor.wordWrap" = "on";
-        "editor.defaultFormatter" = "charliermarsh.ruff";
+        "editor.defaultFormatter" = "esbenp.prettier-vscode";
         "editor.minimap.enabled" = false;
         "editor.formatOnSave" = true;
         "editor.fontSize" = 16;
@@ -42,6 +42,7 @@
         "inlineChat.lineNaturalLanguageHint" = false;
         "terminal.integrated.initialHint" = false;
         "[python]" = {
+          "editor.defaultFormatter" = "charliermarsh.ruff";
           "editor.tabSize" = 4;
           "editor.insertSpaces" = true;
           "editor.detectIndentation" = false;
