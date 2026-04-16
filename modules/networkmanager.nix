@@ -1,9 +1,9 @@
 _: {
   networking.networkmanager.enable = true;
 
-  # Store WiFi passwords system-wide (no secret service needed)
+  # Restrict WiFi connections and their stored secrets to the intended local user
   networking.networkmanager.settings."connection-wifi" = {
     "match-device" = "type:wifi";
-    "connection.permissions" = "";
+    "connection.permissions" = "user:weallcode;";
   };
 }
